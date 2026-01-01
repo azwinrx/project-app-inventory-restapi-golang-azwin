@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"project-app-inventory-restapi-golang-azwin/database"
 	"project-app-inventory-restapi-golang-azwin/model"
@@ -10,8 +11,9 @@ import (
 )
 
 type CategoriesRepository interface {
+	GetCategoriesById(id int) (*model.Categories, error)
 	GetAllCategories(page, limit int) ([]model.Categories, int, error)
-	CreateCategories(i *model.Categories) error
+	CreateCategories(data *model.Categories) error
 	UpdateCategories(id int, data *model.Categories) error
 	DeleteCategories(id int) error
 }
@@ -24,6 +26,26 @@ type categoriesRepository struct {
 func NewCategoriesRepository(db database.PgxIface, log *zap.Logger) CategoriesRepository {
 	return &categoriesRepository{db: db, Logger: log}
 }
+
+func (r *categoriesRepository) GetCategoriesById(id int) (*model.Categories, error) {
+	query := `
+		SELECT id, name, created_at, updated_at
+		FROM categories
+		WHERE id = $1
+	`
+	var c model.Categories
+	err := r.db.QueryRow(context.Background(), query, id).Scan(
+		&c.Id,
+		&c.Name,
+		&c.CreatedAt,
+		&c.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("category not found")
+	}
+	return &c, err
+}
+
 
 func (r *categoriesRepository) GetAllCategories(page, limit int) ([]model.Categories, int, error) {
 	offset := (page - 1) * limit
@@ -39,9 +61,9 @@ func (r *categoriesRepository) GetAllCategories(page, limit int) ([]model.Catego
 
 	// get data with pagination
 	query := `
-		SELECT id, category_id, rack_id, name, sku, stock, min_stock, price, created_at, updated_at
-		FROM items
-		ORDER BY id ASC
+		SELECT id, name, created_at, updated_at
+		FROM categories
+		ORDER BY id
 		LIMIT $1 OFFSET $2
 	`
 	rows, err := r.db.Query(context.Background(), query, limit, offset)
@@ -50,48 +72,41 @@ func (r *categoriesRepository) GetAllCategories(page, limit int) ([]model.Catego
 	}
 	defer rows.Close()
 
-	var items []model.Items
+	var categories []model.Categories
 	for rows.Next() {
-		var i model.Items
+		var c model.Categories
 		err := rows.Scan(
-			&i.Id,
-			&i.CategoryId,
-			&i.RackId,
-			&i.Name,
-			&i.Sku,
-			&i.Stock,
-			&i.MinStock,
-			&i.Price,
-			&i.CreatedAt,
-			&i.UpdatedAt,
+			&c.Id,
+			&c.Name,
+			&c.CreatedAt,
+			&c.UpdatedAt,
 		)
 		if err != nil {
 			return nil, 0, err
 		}
-		items = append(items, i)
+		categories = append(categories, c)
 	}
 
-	return items, total, nil
+	return categories, total, nil
 }
 
-func (r *categoriesRepository) CreateCategories(i *model.Categories) error {
+func (r *categoriesRepository) CreateCategories(data *model.Categories) error {
 	query := `
-		INSERT INTO items (category_id, rack_id, name, sku, stock, min_stock, price, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+		INSERT INTO categories (name, created_at, updated_at)
+		VALUES ($1, NOW(), NOW())
 		RETURNING id
 	`
-	err := r.db.QueryRow(context.Background(), query, i.CategoryId, i.RackId, i.Name, i.Sku, i.Stock, i.MinStock, i.Price).Scan(&i.Id)
+	err := r.db.QueryRow(context.Background(), query, data.Name).Scan(&data.Id)
 	return err
 }
 
-func (r *itemsRepository) UpdateItems(id int, data *model.Items) error {
+func (r *categoriesRepository) UpdateCategories(id int, data *model.Categories) error {
 	query := `
-		UPDATE items
-		SET category_id = $1, rack_id = $2, name = $3, sku = $4, stock = $5, min_stock = $6, price = $7, updated_at = NOW()
-		WHERE id = $8
-		RETURNING id`
+		UPDATE categories
+		SET name = $1, updated_at = NOW()
+		WHERE id = $2`
 
-	result, err := r.db.Exec(context.Background(), query, data.CategoryId, data.RackId, data.Name, data.Sku, data.Stock, data.MinStock, data.Price, id)
+	result, err := r.db.Exec(context.Background(), query, data.Name, id)
 	if err != nil {
 		return err
 	}
@@ -103,8 +118,8 @@ func (r *itemsRepository) UpdateItems(id int, data *model.Items) error {
 	return err
 }
 
-func (r *itemsRepository) DeleteItems(id int) error {
-	query := `DELETE FROM items WHERE id = $1 RETURNING id`
+func (r *categoriesRepository) DeleteCategories(id int) error {
+	query := `DELETE FROM categories WHERE id = $1`
 
 	result, err := r.db.Exec(context.Background(), query, id)
 	if err != nil {

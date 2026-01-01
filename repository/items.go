@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"project-app-inventory-restapi-golang-azwin/database"
 	"project-app-inventory-restapi-golang-azwin/model"
@@ -10,8 +11,9 @@ import (
 )
 
 type ItemsRepository interface {
+	GetItemsById(id int) (*model.Items, error) 
 	GetAllItems(page, limit int) ([]model.Items, int, error)
-	CreateItems(i *model.Items) error
+	CreateItems(data *model.Items) error
 	UpdateItems(id int, data *model.Items) error
 	DeleteItems(id int) error
 }
@@ -23,6 +25,32 @@ type itemsRepository struct {
 
 func NewItemsRepository(db database.PgxIface, log *zap.Logger) ItemsRepository {
 	return &itemsRepository{db: db, Logger: log}
+}
+
+func (r *itemsRepository) GetItemsById(id int) (*model.Items, error) {
+	query := `
+		SELECT id, category_id, rack_id, name, sku, stock, min_stock, price, created_at, updated_at
+		FROM items
+		WHERE id = $1
+
+	`
+	var i model.Items
+	err := r.db.QueryRow(context.Background(), query, id).Scan(
+		&i.Id,
+		&i.CategoryId,
+		&i	.RackId,
+		&i.Name,
+		&i.Sku,
+		&i.Stock,
+		&i.MinStock,
+		&i.Price,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("item not found")
+	}
+	return &i, err
 }
 
 func (r *itemsRepository) GetAllItems(page, limit int) ([]model.Items, int, error) {
@@ -74,13 +102,13 @@ func (r *itemsRepository) GetAllItems(page, limit int) ([]model.Items, int, erro
 	return items, total, nil
 }
 
-func (r *itemsRepository) CreateItems(i *model.Items) error {
+func (r *itemsRepository) CreateItems(data *model.Items) error {
 	query := `
 		INSERT INTO items (category_id, rack_id, name, sku, stock, min_stock, price, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 		RETURNING id
 	`
-	err := r.db.QueryRow(context.Background(), query, i.CategoryId, i.RackId, i.Name, i.Sku, i.Stock, i.MinStock, i.Price).Scan(&i.Id)
+	err := r.db.QueryRow(context.Background(), query, data.CategoryId, data.RackId, data.Name, data.Sku, data.Stock, data.MinStock, data.Price).Scan(&data.Id)
 	return err
 }
 
@@ -88,8 +116,7 @@ func (r *itemsRepository) UpdateItems(id int, data *model.Items) error {
 	query := `
 		UPDATE items
 		SET category_id = $1, rack_id = $2, name = $3, sku = $4, stock = $5, min_stock = $6, price = $7, updated_at = NOW()
-		WHERE id = $8
-		RETURNING id`
+		WHERE id = $8`
 
 	result, err := r.db.Exec(context.Background(), query, data.CategoryId, data.RackId, data.Name, data.Sku, data.Stock, data.MinStock, data.Price, id)
 	if err != nil {
@@ -104,7 +131,7 @@ func (r *itemsRepository) UpdateItems(id int, data *model.Items) error {
 }
 
 func (r *itemsRepository) DeleteItems(id int) error {
-	query := `DELETE FROM items WHERE id = $1 RETURNING id`
+	query := `DELETE FROM items WHERE id = $1`
 
 	result, err := r.db.Exec(context.Background(), query, id)
 	if err != nil {

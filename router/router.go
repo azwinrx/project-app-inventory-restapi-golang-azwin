@@ -26,11 +26,20 @@ func ApiV1(handler handler.Handler, mw mCostume.MiddlewareCostume) *chi.Mux{
 	r.Use(mw.Logging)
 	
 	r.Route("/items", func(r chi.Router) {
+		r.Get("/{id}", handler.ItemsHandler.GetItemsById)
 		r.Get("/", handler.ItemsHandler.GetAllItems)
 		r.Post("/", handler.ItemsHandler.CreateItems)
 		r.Put("/{id}", handler.ItemsHandler.UpdateItems)
 		r.Delete("/{id}", handler.ItemsHandler.DeleteItems)
 	})
 	
+	r.Route("/categories", func(r chi.Router) {
+		r.Get("/{id}", handler.CategoriesHandler.GetCategoriesById)
+		r.Get("/", handler.CategoriesHandler.GetAllCategories)
+		r.Post("/", handler.CategoriesHandler.CreateCategories)
+		r.Put("/{id}", handler.CategoriesHandler.UpdateCategories)
+		r.Delete("/{id}", handler.CategoriesHandler.DeleteCategories)
+	})
+
 	return r
 }

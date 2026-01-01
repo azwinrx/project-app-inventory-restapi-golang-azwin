@@ -13,43 +13,43 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type ItemsHandler struct {
-	ItemsHandlerService service.ItemsService
+type CategoriesHandler struct {
+	CategoriesHandlerService service.CategoriesService
 	config 			utils.Configuration
 }
 
-func NewItemsHandler(itemsService service.ItemsService, config utils.Configuration) ItemsHandler {
-	return ItemsHandler{
-		ItemsHandlerService: itemsService,
+func NewCategoriesHandler(categoriesService service.CategoriesService, config utils.Configuration) CategoriesHandler {
+	return CategoriesHandler{
+		CategoriesHandlerService: categoriesService,
 		config:				config,
 	}
 }
 
-func (i *ItemsHandler) GetItemsById(w http.ResponseWriter, r *http.Request) {
-	itemIDstr := chi.URLParam(r, "id")
+func (c *CategoriesHandler) GetCategoriesById(w http.ResponseWriter, r *http.Request) {
+	categoriesIDstr := chi.URLParam(r, "id")
 
-	itemID, err := strconv.Atoi(itemIDstr)
+	categoriesID, err := strconv.Atoi(categoriesIDstr)
 	if err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, "invalid id format", nil)
 		return
 	}
 
-	response, err := i.ItemsHandlerService.GetItemsById(itemID)
+	response, err := c.CategoriesHandlerService.GetCategoriesById(categoriesID)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusNotFound, "item not found", nil)
+		utils.ResponseBadRequest(w, http.StatusNotFound, "category not found", nil)
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "success get data item by id", response)
+	utils.ResponseSuccess(w, http.StatusOK, "success get data category by id", response)
 }
 
-func (i *ItemsHandler) GetAllItems(w http.ResponseWriter, r *http.Request) {
+func (c *CategoriesHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	// Ambil query param page dan limit
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
 
 	page := 1
-	limit := i.config.Limit
+	limit := c.config.Limit
 	var err error
 	if pageStr != "" {
 		page, err = strconv.Atoi(pageStr)
@@ -60,11 +60,11 @@ func (i *ItemsHandler) GetAllItems(w http.ResponseWriter, r *http.Request) {
 	if limitStr != "" {
 		limit, err = strconv.Atoi(limitStr)
 		if err != nil || limit < 1 {
-			limit = i.config.Limit
+			limit = c.config.Limit
 		}
 	}
 
-	items, total, err := i.ItemsHandlerService.GetAllItems(page, limit)
+	categories, total, err := c.CategoriesHandlerService.GetAllCategories(page, limit)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -74,7 +74,7 @@ func (i *ItemsHandler) GetAllItems(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"data": items,
+		"data": categories,
 		"pagination": map[string]interface{}{
 			"page": page,
 			"limit": limit,
@@ -85,37 +85,30 @@ func (i *ItemsHandler) GetAllItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (i *ItemsHandler) CreateItems(w http.ResponseWriter, r *http.Request) {
-	var newItem dto.ItemsRequest
-	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
+func (c *CategoriesHandler) CreateCategories(w http.ResponseWriter, r *http.Request) {
+	var newCategories dto.CategoriesRequest
+	if err := json.NewDecoder(r.Body).Decode(&newCategories); err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, "error data", nil)
 		return
 	}
 
 	
 	// validation
-	messages, err := utils.ValidateErrors(newItem)
+	messages, err := utils.ValidateErrors(newCategories)
 	if err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), messages)
 		return
 	}
 
 	// parsing to model assignment
-	items := model.Items{
-		Id: newItem.Id,
-		CategoryId: newItem.CategoryId,
-		RackId: newItem.RackId,
-		Name: newItem.Name,
-		Sku: newItem.Sku,
-		Stock: newItem.Stock,
-		MinStock: newItem.MinStock,
-		Price: newItem.Price,
+	categories := model.Categories{
+		Name: newCategories.Name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
 	// create assignment service
-	err = i.ItemsHandlerService.CreateItems(&items)
+	err = c.CategoriesHandlerService.CreateCategories(&categories)
 	if err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), nil)
 		return
@@ -124,44 +117,37 @@ func (i *ItemsHandler) CreateItems(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseSuccess(w, http.StatusOK, "success created item", nil)
 }
 
-func (i *ItemsHandler) UpdateItems(w http.ResponseWriter, r *http.Request) {
-	itemIDstr := chi.URLParam(r, "id")
+func (c *CategoriesHandler) UpdateCategories(w http.ResponseWriter, r *http.Request) {
+	categoriesIDstr := chi.URLParam(r, "id")
 
-	itemID, err := strconv.Atoi(itemIDstr)
+	categoriesID, err := strconv.Atoi(categoriesIDstr)
 	if err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, "error param assignment id :"+err.Error(), nil)
 		return
 	}
 
-	var newItem dto.ItemsRequest
-	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
+	var newCategories dto.CategoriesRequest
+	if err := json.NewDecoder(r.Body).Decode(&newCategories); err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, "error data :"+err.Error(), nil)
 		return
 	}
 
 	// validation
-	messages, err := utils.ValidateErrors(newItem)
+	messages, err := utils.ValidateErrors(newCategories)
 	if err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), messages)
 		return
 	}
 
 	// parsing to model assignment
-	items := model.Items{
-		Id: newItem.Id,
-		CategoryId: newItem.CategoryId,
-		RackId: newItem.RackId,
-		Name: newItem.Name,
-		Sku: newItem.Sku,
-		Stock: newItem.Stock,
-		MinStock: newItem.MinStock,
-		Price: newItem.Price,
+	categories := model.Categories{
+		Name: newCategories.Name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
 
-	err = i.ItemsHandlerService.UpdateItems(itemID, &items)
+	err = c.CategoriesHandlerService.UpdateCategories(categoriesID, &categories)
 	if err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error update :"+err.Error(), nil)
 		return
@@ -170,15 +156,15 @@ func (i *ItemsHandler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseSuccess(w, http.StatusOK, "Updated Success", nil)
 }
 
-func (i *ItemsHandler) DeleteItems(w http.ResponseWriter, r *http.Request) {
-	itemIDstr := chi.URLParam(r, "id")
+func (c *CategoriesHandler) DeleteCategories(w http.ResponseWriter, r *http.Request) {
+	categoriesIDstr := chi.URLParam(r, "id")
 
-	itemID, err := strconv.Atoi(itemIDstr)
+	categoriesID, err := strconv.Atoi(categoriesIDstr)
 	if err != nil {
 		return
 	}
 
-	err = i.ItemsHandlerService.DeleteItems(itemID)
+	err = c.CategoriesHandlerService.DeleteCategories(categoriesID)
 	if err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error delete :"+err.Error(), nil)
 		return

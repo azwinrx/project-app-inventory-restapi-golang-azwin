@@ -6,10 +6,11 @@ import (
 )
 
 type ItemsService interface {
+	GetItemsById(id int) (*model.Items, error) 
 	GetAllItems(page, limit int) ([]model.Items, int, error)
-	Create(i *model.Items) error
-	Update(id int, item *model.Items) error
-	Delete(id int) error
+	CreateItems(data *model.Items) error
+	UpdateItems(id int, data *model.Items) error
+	DeleteItems(id int) error
 }
 
 type itemsService struct {
@@ -20,7 +21,11 @@ func NewItemsService(repo repository.ItemsRepository) ItemsService {
 	return &itemsService{Repo: repo}
 }
 
-func (i *itemsService) GetAllItems(page, limit int) ([]model.Items, int, error) {
+func (s *itemsService) GetItemsById(id int) (*model.Items, error) {
+	return s.Repo.GetItemsById(id)
+}
+
+func (s *itemsService) GetAllItems(page, limit int) ([]model.Items, int, error) {
 	// Validate pagination parameters
 	if page < 1 {
 		page = 1
@@ -32,17 +37,17 @@ func (i *itemsService) GetAllItems(page, limit int) ([]model.Items, int, error) 
 		limit = 100
 	}
 	
-	return i.Repo.GetAllItems(page, limit)
+	return s.Repo.GetAllItems(page, limit)
 }
 
-func (i *itemsService) Create(id *model.Items) error {
-	return i.Repo.CreateItems(id)
+func (s *itemsService) CreateItems(data *model.Items) error {
+	return s.Repo.CreateItems(data)
 }
 
-func (i *itemsService) Update(id int, item *model.Items) error {
-	return i.Repo.UpdateItems(id, item)
+func (s *itemsService) UpdateItems(id int, data *model.Items) error {
+	return s.Repo.UpdateItems(id, data)
 }
 
-func (i *itemsService) Delete(id int) error {
-	return i.Repo.DeleteItems(id)
+func (s *itemsService) DeleteItems(id int) error {
+	return s.Repo.DeleteItems(id)
 }
