@@ -9,6 +9,8 @@ import (
 	"project-app-inventory-restapi-golang-azwin/utils"
 	"strconv"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type ItemsHandler struct {
@@ -65,7 +67,7 @@ func (i *ItemsHandler) GetAllItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (i *ItemsHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
+func (i *ItemsHandler) CreateItems(w http.ResponseWriter, r *http.Request) {
 	var newItem dto.ItemsRequest
 	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
 		utils.ResponseBadRequest(w, http.StatusBadRequest, "error data", nil)
@@ -102,4 +104,67 @@ func (i *ItemsHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.ResponseSuccess(w, http.StatusOK, "success created item", nil)
+}
+
+func (i *ItemsHandler) UpdateItems(w http.ResponseWriter, r *http.Request) {
+	itemIDstr := chi.URLParam(r, "id")
+
+	itemID, err := strconv.Atoi(itemIDstr)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "error param assignment id :"+err.Error(), nil)
+		return
+	}
+
+	var newItem dto.ItemsRequest
+	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "error data :"+err.Error(), nil)
+		return
+	}
+
+	// validation
+	messages, err := utils.ValidateErrors(newItem)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), messages)
+		return
+	}
+
+	// parsing to model assignment
+	items := model.Items{
+		Id: newItem.Id,
+		CategoryId: newItem.CategoryId,
+		RackId: newItem.RackId,
+		Name: newItem.Name,
+		Sku: newItem.Sku,
+		Stock: newItem.Stock,
+		MinStock: newItem.MinStock,
+		Price: newItem.Price,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+
+	err = i.ItemsHandlerService.Update(itemID, &items)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error update :"+err.Error(), nil)
+		return
+	}
+
+	utils.ResponseSuccess(w, http.StatusOK, "Updated Success", nil)
+}
+
+func (i *ItemsHandler) DeleteItems(w http.ResponseWriter, r *http.Request) {
+	itemIDstr := chi.URLParam(r, "id")
+
+	itemID, err := strconv.Atoi(itemIDstr)
+	if err != nil {
+		return
+	}
+
+	err = i.ItemsHandlerService.Delete(itemID)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error delete :"+err.Error(), nil)
+		return
+	}
+
+	utils.ResponseSuccess(w, http.StatusOK, "Deleted Success", nil)
 }

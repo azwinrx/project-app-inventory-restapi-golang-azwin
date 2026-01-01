@@ -7,7 +7,9 @@ import (
 
 type ItemsService interface {
 	GetAllItems(page, limit int) ([]model.Items, int, error)
-	Create(a *model.Items) error
+	Create(i *model.Items) error
+	Update(id int, item *model.Items) error
+	Delete(id int) error
 }
 
 type itemsService struct {
@@ -18,7 +20,7 @@ func NewItemsService(repo repository.ItemsRepository) ItemsService {
 	return &itemsService{Repo: repo}
 }
 
-func (s *itemsService) GetAllItems(page, limit int) ([]model.Items, int, error) {
+func (i *itemsService) GetAllItems(page, limit int) ([]model.Items, int, error) {
 	// Validate pagination parameters
 	if page < 1 {
 		page = 1
@@ -30,9 +32,17 @@ func (s *itemsService) GetAllItems(page, limit int) ([]model.Items, int, error) 
 		limit = 100
 	}
 	
-	return s.Repo.GetAllItems(page, limit)
+	return i.Repo.GetAllItems(page, limit)
 }
 
-func (s *itemsService) Create(a *model.Items) error {
-	return s.Repo.CreateItems(a)
+func (i *itemsService) Create(id *model.Items) error {
+	return i.Repo.CreateItems(id)
+}
+
+func (i *itemsService) Update(id int, item *model.Items) error {
+	return i.Repo.UpdateItems(id, item)
+}
+
+func (i *itemsService) Delete(id int) error {
+	return i.Repo.DeleteItems(id)
 }

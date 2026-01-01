@@ -27,7 +27,9 @@ func ApiV1(handler handler.Handler, mw mCostume.MiddlewareCostume) *chi.Mux{
 	
 	r.Route("/items", func(r chi.Router) {
 		r.Get("/", handler.ItemsHandler.GetAllItems)
-		r.Post("/", handler.ItemsHandler.CreateItem)
+		r.Post("/", handler.ItemsHandler.CreateItems)
+		r.Put("/{id}", handler.ItemsHandler.UpdateItems)
+		r.Delete("/{id}", handler.ItemsHandler.DeleteItems)
 	})
 	
 	return r

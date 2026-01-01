@@ -9,28 +9,28 @@ import (
 	"go.uber.org/zap"
 )
 
-type ItemsRepository interface {
-	GetAllItems(page, limit int) ([]model.Items, int, error)
-	CreateItems(i *model.Items) error
-	UpdateItems(id int, data *model.Items) error
-	DeleteItems(id int) error
+type CategoriesRepository interface {
+	GetAllCategories(page, limit int) ([]model.Categories, int, error)
+	CreateCategories(i *model.Categories) error
+	UpdateCategories(id int, data *model.Categories) error
+	DeleteCategories(id int) error
 }
 
-type itemsRepository struct {
+type categoriesRepository struct {
 	db database.PgxIface
 	Logger *zap.Logger
 }
 
-func NewItemsRepository(db database.PgxIface, log *zap.Logger) ItemsRepository {
-	return &itemsRepository{db: db, Logger: log}
+func NewCategoriesRepository(db database.PgxIface, log *zap.Logger) CategoriesRepository {
+	return &categoriesRepository{db: db, Logger: log}
 }
 
-func (r *itemsRepository) GetAllItems(page, limit int) ([]model.Items, int, error) {
+func (r *categoriesRepository) GetAllCategories(page, limit int) ([]model.Categories, int, error) {
 	offset := (page - 1) * limit
 
 	// get total data for pagination
 	var total int
-	countQuery := `SELECT COUNT(*) FROM items`
+	countQuery := `SELECT COUNT(*) FROM categories`
 	err := r.db.QueryRow(context.Background(), countQuery).Scan(&total)
 	if err != nil {
 		r.Logger.Error("error query findall repo ", zap.Error(err))
@@ -74,7 +74,7 @@ func (r *itemsRepository) GetAllItems(page, limit int) ([]model.Items, int, erro
 	return items, total, nil
 }
 
-func (r *itemsRepository) CreateItems(i *model.Items) error {
+func (r *categoriesRepository) CreateCategories(i *model.Categories) error {
 	query := `
 		INSERT INTO items (category_id, rack_id, name, sku, stock, min_stock, price, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
