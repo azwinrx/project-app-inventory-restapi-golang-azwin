@@ -10,6 +10,7 @@ import (
 
 type ItemsRepository interface {
 	GetAllItems(page, limit int) ([]model.Items, int, error)
+	CreateItems(a *model.Items) error
 }
 
 type itemsRepository struct {
@@ -68,4 +69,13 @@ func (r *itemsRepository) GetAllItems(page, limit int) ([]model.Items, int, erro
 	}
 
 	return items, total, nil
+}
+
+func (r *itemsRepository) CreateItems(a *model.Items) error {
+	query := `
+		INSERT INTO items (category_id, rack_id, name, sku, stock, min_stock, price, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+	`
+	err := r.db.QueryRow(context.Background(), query, a.CategoryId, a.RackId, a.Name, a.Sku, a.Stock, a.MinStock, a.Price).Scan(&a.Id)
+	return err
 }

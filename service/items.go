@@ -7,6 +7,7 @@ import (
 
 type ItemsService interface {
 	GetAllItems(page, limit int) ([]model.Items, int, error)
+	Create(a *model.Items) error
 }
 
 type itemsService struct {
@@ -32,3 +33,6 @@ func (s *itemsService) GetAllItems(page, limit int) ([]model.Items, int, error) 
 	return s.Repo.GetAllItems(page, limit)
 }
 
+func (s *itemsService) Create(a *model.Items) error {
+	return s.Repo.CreateItems(a)
+}

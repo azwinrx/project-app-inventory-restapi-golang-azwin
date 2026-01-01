@@ -36,17 +36,13 @@ func main() {
 	defer logger.Sync()
 
 	// Initialize repository
-	itemsRepo := repository.NewItemsRepository(db, logger)
+	repo := repository.NewRepository(db, logger)
+	service := service.NewService(repo)
+	handler := handler.NewHandler(service, *loadConfig)
 
-	// Initialize service
-	svc := service.NewService(itemsRepo)
-	itemsService := svc.ItemsRepo
-
-	// Initialize handler
-	itemsHandler := handler.NewItemsHandler(itemsService, *loadConfig)
 
 	// Initialize router
-	r := router.NewRouter(itemsHandler)
+	r := router.NewRouter(handler, service, logger)
 
 	// Start server
 	addr := fmt.Sprintf(":%d", loadConfig.Port)
