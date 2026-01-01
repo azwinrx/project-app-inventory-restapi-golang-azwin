@@ -41,5 +41,21 @@ func ApiV1(handler handler.Handler, mw mCostume.MiddlewareCostume) *chi.Mux{
 		r.Delete("/{id}", handler.CategoriesHandler.DeleteCategories)
 	})
 
+	r.Route("/racks", func(r chi.Router) {
+		r.Get("/{id}", handler.RacksHandler.GetRacksById)
+		r.Get("/", handler.RacksHandler.GetAllRacks)
+		r.Post("/", handler.RacksHandler.CreateRacks)
+		r.Put("/{id}", handler.RacksHandler.UpdateRacks)
+		r.Delete("/{id}", handler.RacksHandler.DeleteRacks)
+	})
+
+	r.Route("/warehouses", func(r chi.Router) {
+		r.Get("/{id}", handler.WarehousesHandler.GetWarehousesById)
+		r.Get("/", handler.WarehousesHandler.GetAllWarehouses)
+		r.Post("/", handler.WarehousesHandler.CreateWarehouses)
+		r.Put("/{id}", handler.WarehousesHandler.UpdateWarehouses)
+		r.Delete("/{id}", handler.WarehousesHandler.DeleteWarehouses)
+	})
+
 	return r
 }

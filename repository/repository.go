@@ -9,11 +9,15 @@ import (
 type Repository struct {
 	ItemsRepo *itemsRepository
 	CategoriesRepo *categoriesRepository
+	RacksRepo *racksRepository
+	WarehousesRepo *warehousesRepository
 }
 
 func NewRepository(db database.PgxIface, log *zap.Logger) Repository {
 	return Repository{
 		ItemsRepo: &itemsRepository{db: db, Logger: log},
 		CategoriesRepo: &categoriesRepository{db: db, Logger: log},
+		RacksRepo: &racksRepository{db: db, Logger: log},
+		WarehousesRepo: &warehousesRepository{db: db, Logger: log},
 	}
 }
