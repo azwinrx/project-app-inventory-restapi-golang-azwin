@@ -9,6 +9,7 @@ type Service struct {
 	CategoriesService CategoriesService
 	RacksService RacksService
 	WarehousesService WarehousesService
+	UsersService UsersService
 }
 
 func NewService(Repo repository.Repository) Service {
@@ -17,5 +18,6 @@ func NewService(Repo repository.Repository) Service {
 		CategoriesService: NewCategoriesService(Repo.CategoriesRepo),
 		RacksService: NewRacksService(Repo.RacksRepo),
 		WarehousesService: NewWarehousesService(Repo.WarehousesRepo),
+		UsersService: NewUsersService(Repo.UsersRepo),
 	}
 }

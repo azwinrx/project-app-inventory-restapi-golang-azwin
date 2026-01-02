@@ -57,5 +57,12 @@ func ApiV1(handler handler.Handler, mw mCostume.MiddlewareCostume) *chi.Mux{
 		r.Delete("/{id}", handler.WarehousesHandler.DeleteWarehouses)
 	})
 
+	r.Route("/users", func(r chi.Router) {
+		r.Get("/{id}", handler.UsersHandler.GetUsersByID)
+		r.Get("/", handler.UsersHandler.GetAllUsers)
+		r.Get("/email/{email}", handler.UsersHandler.GetUsersByEmail)
+		r.Post("/", handler.UsersHandler.CreateUsers)
+	})
+
 	return r
 }
