@@ -7,11 +7,17 @@ import (
 type Service struct {
 	ItemsService ItemsService
 	CategoriesService CategoriesService
+	RacksService RacksService
+	WarehousesService WarehousesService
+	UsersService UsersService
 }
 
 func NewService(Repo repository.Repository) Service {
 	return Service{
 		ItemsService: NewItemsService(Repo.ItemsRepo),
 		CategoriesService: NewCategoriesService(Repo.CategoriesRepo),
+		RacksService: NewRacksService(Repo.RacksRepo),
+		WarehousesService: NewWarehousesService(Repo.WarehousesRepo),
+		UsersService: NewUsersService(Repo.UsersRepo),
 	}
 }
