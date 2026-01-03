@@ -45,7 +45,7 @@ func (u *UsersHandler) GetUsersByID(w http.ResponseWriter, r *http.Request) {
 
 // GetAllUsers - Get all users with pagination
 func (u *UsersHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := u.UsersHandlerService.FindAllUsers()
+	users, err := u.UsersHandlerService.GetAllUsers()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -65,7 +65,7 @@ func (u *UsersHandler) GetUsersByEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.UsersHandlerService.FindUsersByEmail(email)
+	user, err := u.UsersHandlerService.GetUsersByEmail(email)
 	if err != nil {
 		utils.ResponseBadRequest(w, http.StatusInternalServerError, "error finding user", nil)
 		return
@@ -109,4 +109,58 @@ func (u *UsersHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseSuccess(w, http.StatusCreated, "success create user", users)
 }
 
+func (u *UsersHandler) UpdateUsers(w http.ResponseWriter, r *http.Request) {
+	usersIDStr := chi.URLParam(r, "id")
+
+	usersID, err := strconv.Atoi(usersIDStr)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "invalid id format", nil)
+		return
+	}
+
+	var userReq dto.Usersrequest
+
+	err = json.NewDecoder(r.Body).Decode(&userReq)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "invalid request body", nil)
+		return
+	}
+
+	// Hash password before saving
+	rawPassword := userReq.Password
+	hashedPassword := utils.HashPassword(rawPassword)
+
+	// Map DTO to model
+	users := model.Users{
+		Username: userReq.Username,
+		Email:    userReq.Email,
+		Password: hashedPassword,
+		Role:     userReq.Role,
+	}
+
+	err = u.UsersHandlerService.UpdateUsers(usersID, &users)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusInternalServerError, "error updating user", nil)
+		return
+	}
+
+	utils.ResponseSuccess(w, http.StatusOK, "success update user", users)
+}
+
+func (u *UsersHandler) DeleteUsers(w http.ResponseWriter, r *http.Request) {
+	usersIDStr := chi.URLParam(r, "id")
+
+	usersID, err := strconv.Atoi(usersIDStr)
+	if err != nil {
+		return
+	}
+
+	err = u.UsersHandlerService.DeleteUsers(usersID)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error delete :"+err.Error(), nil)
+		return
+	}
+
+	utils.ResponseSuccess(w, http.StatusOK, "Deleted Success", nil)
+}
 

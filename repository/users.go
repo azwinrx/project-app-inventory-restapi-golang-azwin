@@ -11,10 +11,11 @@ import (
 )
 
 type UsersRepository interface {
-	FindUsersByEmail(email string) (*model.Users, error)
+	GetUsersByEmail(email string) (*model.Users, error)
 	CreateUsers(data *model.Users) error
-	FindAllUsers() ([]model.Users, error)
+	GetAllUsers() ([]model.Users, error)
 	GetUsersByID(id int) (model.Users, error)
+	UpdateUsers(id int, data *model.Users) error
 	DeleteUsers(id int) error
 }
 
@@ -27,7 +28,7 @@ func NewUsersRepository(db database.PgxIface, log *zap.Logger) UsersRepository {
 	return &usersRepository{db: db, Logger: log}
 }
 
-func (r *usersRepository) FindUsersByEmail(email string) (*model.Users, error) {
+func (r *usersRepository) GetUsersByEmail(email string) (*model.Users, error) {
 	query := `
 		SELECT id, username, email, password, role, created_at, updated_at
 		FROM users
@@ -45,7 +46,7 @@ func (r *usersRepository) FindUsersByEmail(email string) (*model.Users, error) {
 }
 
 
-func (r *usersRepository) FindAllUsers() ([]model.Users, error) {
+func (r *usersRepository) GetAllUsers() ([]model.Users, error) {
 	rows, err := r.db.Query(context.Background(), `SELECT id, username, email, password, role, created_at, updated_at FROM users`)
 	if err != nil {
 		return nil, err
@@ -86,6 +87,23 @@ func (r *usersRepository) GetUsersByID(id int) (model.Users, error) {
 	}
 
 	return user, nil
+}
+
+func (r *usersRepository) UpdateUsers(id int, data *model.Users) error {
+	query := `
+		UPDATE users
+		SET username = $1, email = $2, password = $3, role = $4, updated_at = NOW()
+		WHERE id = $5
+	`
+	result, err := r.db.Exec(context.Background(), query, data.Username, data.Email, data.Password, data.Role, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("user not found or already deleted")
+	}
+	return err
 }
 
 func (r *usersRepository) DeleteUsers(id int) error {
