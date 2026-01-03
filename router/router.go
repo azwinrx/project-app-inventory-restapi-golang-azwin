@@ -92,5 +92,25 @@ func ApiV1(handler handler.Handler, mw mCostume.MiddlewareCostume) *chi.Mux{
 		r.Delete("/{id}", handler.UsersHandler.DeleteUsers)
 	})
 
+	r.Route("/sales", func(r chi.Router) {
+		// get sale by id
+		r.Get("/{id}", handler.SalesHandler.GetSalesById)
+		// get all sales
+		r.Get("/", handler.SalesHandler.GetAllSales)
+		// create sale
+		r.Post("/", handler.SalesHandler.CreateSales)
+		// update sale
+		r.Put("/{id}", handler.SalesHandler.UpdateSales)
+		// delete sale
+		r.Delete("/{id}", handler.SalesHandler.DeleteSales)
+	})
+
+	r.Route("/reports", func(r chi.Router) {
+		// get dashboard report
+		r.Get("/dashboard", handler.ReportsHandler.GetDashboardReport)
+		// get item sales report
+		r.Get("/items-sales", handler.ReportsHandler.GetItemSalesReport)
+	})
+
 	return r
 }
