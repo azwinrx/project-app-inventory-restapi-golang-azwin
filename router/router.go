@@ -26,6 +26,8 @@ func ApiV1(handler handler.Handler, mw mCostume.MiddlewareCostume) *chi.Mux{
 	r.Use(mw.Logging)
 	
 	r.Route("/items", func(r chi.Router) {
+		// get low stock items (must be before /{id} to avoid conflict)
+		r.Get("/low-stock", handler.ItemsHandler.GetLowStockItems)
 		// get item by id
 		r.Get("/{id}", handler.ItemsHandler.GetItemsById)
 		// get all items

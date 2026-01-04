@@ -85,6 +85,44 @@ func (i *ItemsHandler) GetAllItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func (i *ItemsHandler) GetLowStockItems(w http.ResponseWriter, r *http.Request) {
+	// Ambil query param threshold (default 5)
+	thresholdStr := r.URL.Query().Get("threshold")
+	
+	threshold := 5 // default minimum stock
+	var err error
+	if thresholdStr != "" {
+		threshold, err = strconv.Atoi(thresholdStr)
+		if err != nil || threshold < 1 {
+			utils.ResponseBadRequest(w, http.StatusBadRequest, "invalid threshold value", nil)
+			return
+		}
+	}
+
+	items, err := i.ItemsHandlerService.GetLowStockItems(threshold)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error getting low stock items",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	response := map[string]interface{}{
+		"status":    true,
+		"message":   "success get low stock items",
+		"data":      items,
+		"threshold": threshold,
+		"count":     len(items),
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
 func (i *ItemsHandler) CreateItems(w http.ResponseWriter, r *http.Request) {
 	var newItem dto.ItemsRequest
 	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {

@@ -13,6 +13,7 @@ import (
 type ItemsRepository interface {
 	GetItemsById(id int) (*model.Items, error) 
 	GetAllItems(page, limit int) ([]model.Items, int, error)
+	GetLowStockItems(threshold int) ([]model.Items, error)
 	CreateItems(data *model.Items) error
 	UpdateItems(id int, data *model.Items) error
 	DeleteItems(id int) error
@@ -100,6 +101,59 @@ func (r *itemsRepository) GetAllItems(page, limit int) ([]model.Items, int, erro
 	}
 
 	return items, total, nil
+}
+
+func (r *itemsRepository) GetLowStockItems(threshold int) ([]model.Items, error) {
+	query := `
+		SELECT id, category_id, rack_id, name, sku, stock, min_stock, price, created_at, updated_at
+		FROM items
+		WHERE stock < $1
+		ORDER BY stock ASC, name ASC
+	`
+
+	rows, err := r.db.Query(context.Background(), query, threshold)
+	if err != nil {
+		r.Logger.Error("failed to get low stock items",
+			zap.Int("threshold", threshold),
+			zap.Error(err),
+		)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []model.Items
+	for rows.Next() {
+		var i model.Items
+		err := rows.Scan(
+			&i.Id,
+			&i.CategoryId,
+			&i.RackId,
+			&i.Name,
+			&i.Sku,
+			&i.Stock,
+			&i.MinStock,
+			&i.Price,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		)
+		if err != nil {
+			r.Logger.Error("failed to scan low stock item", zap.Error(err))
+			return nil, err
+		}
+		items = append(items, i)
+	}
+
+	if err = rows.Err(); err != nil {
+		r.Logger.Error("error iterating low stock items", zap.Error(err))
+		return nil, err
+	}
+
+	r.Logger.Info("low stock items retrieved",
+		zap.Int("count", len(items)),
+		zap.Int("threshold", threshold),
+	)
+
+	return items, nil
 }
 
 func (r *itemsRepository) CreateItems(data *model.Items) error {

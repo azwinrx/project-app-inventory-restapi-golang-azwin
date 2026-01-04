@@ -2,27 +2,28 @@
 
 Mini Project Bootcamp Backend Golang Batch 3 (Inventory System RESTful API)
 
-## 📋 Features
+## Features
 
-- ✅ RESTful API with Chi Router
-- ✅ PostgreSQL Database with pgx driver
-- ✅ Daily Log Rotation with Zap Logger
-- ✅ Request Validation
-- ✅ Middleware (Logging, Authentication)
-- ✅ Clean Architecture (Handler → Service → Repository)
-- ✅ CRUD Operations for:
+- RESTful API with Chi Router
+- PostgreSQL Database with pgx driver
+- Daily Log Rotation with Zap Logger
+- Request Validation
+- Middleware (Logging, Authentication)
+- Clean Architecture (Handler → Service → Repository)
+- CRUD Operations for:
   - Users
   - Categories
   - Items
   - Racks
   - Warehouses
   - Sales
-- ✅ Reporting System:
+- Reporting System:
   - Items Report (Total barang & stock)
   - Sales Report (Total transaksi & penjualan)
   - Revenue Report (Pendapatan & rata-rata)
+- **Low Stock Alert**: Monitor barang dengan stock di bawah threshold minimum
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Setup Environment
 
@@ -46,17 +47,17 @@ go run main.go
 
 Application will start on `http://localhost:8080`
 
-## 📊 Logging System
+## Logging System
 
 Aplikasi ini memiliki sistem logging otomatis yang mencatat semua aktivitas ke file log harian.
 
 ### Features:
 
-- 📁 **Daily Log Files** - File dibuat otomatis per hari: `logs/app-2026-01-04.log`
-- 🔄 **Auto Rotation** - File > 10MB otomatis di-rotate
-- 🗜️ **Compression** - File lama di-compress dengan gzip
-- 📅 **30 Days Retention** - File > 30 hari dihapus otomatis
-- 📝 **Dual Output** - Log ke file (JSON) dan console (readable)
+- **Daily Log Files** - File dibuat otomatis per hari: `logs/app-2026-01-04.log`
+- **Auto Rotation** - File > 10MB otomatis di-rotate
+- **Compression** - File lama di-compress dengan gzip
+- **30 Days Retention** - File > 30 hari dihapus otomatis
+- **Dual Output** - Log ke file (JSON) dan console (readable)
 
 ### Quick View Logs:
 
@@ -68,9 +69,7 @@ tail -f logs/app-2026-01-04.log
 cat logs/app-2026-01-04.log | jq '.'
 ```
 
-📚 **Dokumentasi Lengkap**: [LOGGING.md](docs/LOGGING.md) | [Quick Start](docs/LOGGING_QUICKSTART.md)
-
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 .
@@ -89,13 +88,22 @@ cat logs/app-2026-01-04.log | jq '.'
 └── .env.example      # Environment template
 ```
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Reports
 
 - `GET /reports/items` - Total barang & stock
 - `GET /reports/sales` - Total penjualan & transaksi
 - `GET /reports/revenue` - Total pendapatan & rata-rata
+
+### Items
+
+- `GET /items` - Get all items (with pagination)
+- `GET /items/{id}` - Get item by ID
+- `GET /items/low-stock` - Get items dengan stock rendah
+- `POST /items` - Create item
+- `PUT /items/{id}` - Update item
+- `DELETE /items/{id}` - Delete item
 
 ### Users
 
@@ -105,11 +113,11 @@ cat logs/app-2026-01-04.log | jq '.'
 - `PUT /users/{id}` - Update user
 - `DELETE /users/{id}` - Delete user
 
-### Categories, Items, Racks, Warehouses, Sales
+### Categories, Racks, Warehouses, Sales
 
 Similar CRUD operations for each resource.
 
-## 🔧 Configuration
+## Configuration
 
 Edit `.env` file:
 
@@ -132,7 +140,7 @@ DATABASE_MAX_CONN=10
 PATH_LOGGING=logs/      # Log directory
 ```
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Language**: Go 1.21+
 - **Router**: Chi
@@ -142,7 +150,7 @@ PATH_LOGGING=logs/      # Log directory
 - **Config**: Viper
 - **Log Rotation**: lumberjack
 
-## 📦 Dependencies
+## Dependencies
 
 ```bash
 go get github.com/go-chi/chi/v5
@@ -153,7 +161,7 @@ go get github.com/spf13/viper
 go get gopkg.in/natefinch/lumberjack.v2
 ```
 
-## 📝 Development
+## Development
 
 ```bash
 # Run with hot reload (air)
@@ -169,6 +177,6 @@ go build -o app main.go
 ./app
 ```
 
-## 📄 License
+## License
 
 MIT License - Lumoshive Bootcamp Backend Golang Batch 3
