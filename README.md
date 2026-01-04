@@ -2,6 +2,10 @@
 
 Mini Project Bootcamp Backend Golang Batch 3 (Inventory System RESTful API)
 
+##
+
+Link Youtube Video : https://youtu.be/twReFi8Awl4
+
 ## Features
 
 - RESTful API with Chi Router
