@@ -27,13 +27,19 @@ func main() {
 		return
 	}
 
-	// Initialize logger
-	logger, err := zap.NewProduction()
+	// Initialize logger with daily log rotation
+	logger, err := utils.InitLogger(loadConfig.PathLogging, loadConfig.Debug)
 	if err != nil {
 		fmt.Printf("Failed to initialize logger: %v\n", err)
 		return
 	}
 	defer logger.Sync()
+
+	logger.Info("Application starting",
+		zap.String("app_name", "Inventory REST API"),
+		zap.Int("port", loadConfig.Port),
+		zap.Bool("debug", loadConfig.Debug),
+	)
 
 	// Initialize repository
 	repo := repository.NewRepository(db, logger)

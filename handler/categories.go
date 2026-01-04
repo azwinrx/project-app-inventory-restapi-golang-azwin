@@ -110,11 +110,16 @@ func (c *CategoriesHandler) CreateCategories(w http.ResponseWriter, r *http.Requ
 	// create assignment service
 	err = c.CategoriesHandlerService.CreateCategories(&categories)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error creating category",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "success created item", nil)
+	utils.ResponseSuccess(w, http.StatusCreated, "success created category", categories)
 }
 
 func (c *CategoriesHandler) UpdateCategories(w http.ResponseWriter, r *http.Request) {
@@ -149,11 +154,16 @@ func (c *CategoriesHandler) UpdateCategories(w http.ResponseWriter, r *http.Requ
 
 	err = c.CategoriesHandlerService.UpdateCategories(categoriesID, &categories)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error update :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error updating category",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Updated Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success update category", categories)
 }
 
 func (c *CategoriesHandler) DeleteCategories(w http.ResponseWriter, r *http.Request) {
@@ -166,9 +176,14 @@ func (c *CategoriesHandler) DeleteCategories(w http.ResponseWriter, r *http.Requ
 
 	err = c.CategoriesHandlerService.DeleteCategories(categoriesID)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error delete :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error deleting category",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Deleted Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success delete category", nil)
 }

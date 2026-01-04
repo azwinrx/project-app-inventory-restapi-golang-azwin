@@ -110,11 +110,16 @@ func (h *RacksHandler) CreateRacks(w http.ResponseWriter, r *http.Request) {
 	// create service
 	err = h.RacksHandlerService.CreateRacks(&racks)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error creating rack",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "success created rack", nil)
+	utils.ResponseSuccess(w, http.StatusCreated, "success created rack", racks)
 }
 
 func (h *RacksHandler) UpdateRacks(w http.ResponseWriter, r *http.Request) {
@@ -149,11 +154,16 @@ func (h *RacksHandler) UpdateRacks(w http.ResponseWriter, r *http.Request) {
 
 	err = h.RacksHandlerService.UpdateRacks(racksID, &racks)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error update :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error updating rack",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Updated Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success update rack", racks)
 }
 
 func (h *RacksHandler) DeleteRacks(w http.ResponseWriter, r *http.Request) {
@@ -166,9 +176,14 @@ func (h *RacksHandler) DeleteRacks(w http.ResponseWriter, r *http.Request) {
 
 	err = h.RacksHandlerService.DeleteRacks(racksID)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error delete :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error deleting rack",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Deleted Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success delete rack", nil)
 }

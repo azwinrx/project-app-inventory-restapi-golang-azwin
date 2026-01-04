@@ -83,7 +83,7 @@ func ApiV1(handler handler.Handler, mw mCostume.MiddlewareCostume) *chi.Mux{
 		// get all users
 		r.Get("/", handler.UsersHandler.GetAllUsers)
 		// get user by email
-		r.Get("/", handler.UsersHandler.GetUsersByEmail)
+		r.Get("/email", handler.UsersHandler.GetUsersByEmail)
 		// create user
 		r.Post("/", handler.UsersHandler.CreateUsers)
 		// update user

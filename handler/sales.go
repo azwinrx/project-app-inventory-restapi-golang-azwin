@@ -100,7 +100,12 @@ func (h *SalesHandler) CreateSales(w http.ResponseWriter, r *http.Request) {
 	// Create sale
 	err = h.SalesHandlerService.CreateSales(&newSale)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error creating sale",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -132,7 +137,12 @@ func (h *SalesHandler) UpdateSales(w http.ResponseWriter, r *http.Request) {
 	// Update sale
 	err = h.SalesHandlerService.UpdateSales(saleID, &updateSale)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error updating sale",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -150,7 +160,12 @@ func (h *SalesHandler) DeleteSales(w http.ResponseWriter, r *http.Request) {
 
 	err = h.SalesHandlerService.DeleteSales(saleID)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error deleting sale",
+			"error":   err.Error(),
+		})
 		return
 	}
 

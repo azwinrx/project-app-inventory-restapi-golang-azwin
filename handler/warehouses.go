@@ -110,11 +110,16 @@ func (h *WarehousesHandler) CreateWarehouses(w http.ResponseWriter, r *http.Requ
 	// create service
 	err = h.WarehousesHandlerService.CreateWarehouses(&warehouses)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error creating warehouse",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "success created warehouse", nil)
+	utils.ResponseSuccess(w, http.StatusCreated, "success created warehouse", warehouses)
 }
 
 func (h *WarehousesHandler) UpdateWarehouses(w http.ResponseWriter, r *http.Request) {
@@ -149,11 +154,16 @@ func (h *WarehousesHandler) UpdateWarehouses(w http.ResponseWriter, r *http.Requ
 
 	err = h.WarehousesHandlerService.UpdateWarehouses(warehousesID, &warehouses)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error update :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error updating warehouse",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Updated Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success update warehouse", warehouses)
 }
 
 func (h *WarehousesHandler) DeleteWarehouses(w http.ResponseWriter, r *http.Request) {
@@ -166,9 +176,14 @@ func (h *WarehousesHandler) DeleteWarehouses(w http.ResponseWriter, r *http.Requ
 
 	err = h.WarehousesHandlerService.DeleteWarehouses(warehousesID)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error delete :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error deleting warehouse",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Deleted Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success delete warehouse", nil)
 }

@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"go.uber.org/zap"
@@ -9,7 +11,16 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func InitLogger(path string, debug bool) (*zap.Logger, error) {
+func InitLogger(logDir string, debug bool) (*zap.Logger, error) {
+	// Buat directory logs jika belum ada
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create log directory: %w", err)
+	}
+
+	// Generate filename dengan format: app-2026-01-04.log
+	filename := fmt.Sprintf("app-%s.log", time.Now().Format("2006-01-02"))
+	logPath := filepath.Join(logDir, filename)
+
 	// Encoder config
 	encoderConfig := zap.NewProductionEncoderConfig()
 	if debug {
@@ -17,32 +28,50 @@ func InitLogger(path string, debug bool) (*zap.Logger, error) {
 	}
 	encoderConfig.TimeKey = "timestamp"
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	encoderConfig.CallerKey = "caller"
+	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 
-	// set format log
-	encoder := zapcore.NewJSONEncoder(encoderConfig)
-	if debug {
-		encoder = zapcore.NewConsoleEncoder(encoderConfig)
-	}
+	// Set format log
+	fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
+	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
 
-	// File sink dengan rotasi log
+	// File sink dengan rotasi log harian
 	fileWriter := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   path + time.Now().Format("20060102") + ".log",
-		MaxSize:    10, // MB
-		MaxBackups: 7,
-		MaxAge:     28, // days
-		Compress:   true,
+		Filename:   logPath,
+		MaxSize:    10,    // MB - maksimal ukuran file sebelum rotasi
+		MaxBackups: 30,    // Simpan 30 file backup
+		MaxAge:     30,    // days - hapus file lebih dari 30 hari
+		Compress:   true,  // Compress old log files
+		LocalTime:  true,  // Gunakan waktu lokal
 	})
 
-	// Stdout sink
+	// Console sink (stdout)
 	consoleWriter := zapcore.AddSync(os.Stdout)
 
-	// Gabungkan ke dalam satu core
+	// Set log level
+	var logLevel zapcore.Level
+	if debug {
+		logLevel = zap.DebugLevel
+	} else {
+		logLevel = zap.InfoLevel
+	}
+
+	// Gabungkan file dan console output
 	core := zapcore.NewTee(
-		zapcore.NewCore(encoder, fileWriter, zap.InfoLevel),
-		zapcore.NewCore(encoder, consoleWriter, zap.InfoLevel),
+		zapcore.NewCore(fileEncoder, fileWriter, logLevel),    // Log ke file (JSON format)
+		zapcore.NewCore(consoleEncoder, consoleWriter, logLevel), // Log ke console (readable format)
 	)
 
-	// Buat logger
-	logger := zap.New(core, zap.AddCaller())
+	// Buat logger dengan options
+	logger := zap.New(core, 
+		zap.AddCaller(),
+		zap.AddStacktrace(zapcore.ErrorLevel),
+	)
+	
+	logger.Info("Logger initialized", 
+		zap.String("log_file", logPath),
+		zap.Bool("debug_mode", debug),
+	)
+
 	return logger, nil
 }

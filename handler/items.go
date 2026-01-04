@@ -117,11 +117,16 @@ func (i *ItemsHandler) CreateItems(w http.ResponseWriter, r *http.Request) {
 	// create assignment service
 	err = i.ItemsHandlerService.CreateItems(&items)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error creating item",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "success created item", nil)
+	utils.ResponseSuccess(w, http.StatusCreated, "success created item", items)
 }
 
 func (i *ItemsHandler) UpdateItems(w http.ResponseWriter, r *http.Request) {
@@ -163,11 +168,16 @@ func (i *ItemsHandler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 
 	err = i.ItemsHandlerService.UpdateItems(itemID, &items)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error update :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error updating item",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Updated Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success update item", items)
 }
 
 func (i *ItemsHandler) DeleteItems(w http.ResponseWriter, r *http.Request) {
@@ -180,9 +190,14 @@ func (i *ItemsHandler) DeleteItems(w http.ResponseWriter, r *http.Request) {
 
 	err = i.ItemsHandlerService.DeleteItems(itemID)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error delete :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error deleting item",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Deleted Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success delete item", nil)
 }

@@ -67,12 +67,21 @@ func (u *UsersHandler) GetUsersByEmail(w http.ResponseWriter, r *http.Request) {
 
 	user, err := u.UsersHandlerService.GetUsersByEmail(email)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusInternalServerError, "error finding user", nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error finding user",
+			"error":   err.Error(),
+		})
 		return
 	}
 
 	if user == nil {
-		utils.ResponseBadRequest(w, http.StatusNotFound, "user not found", nil)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "user not found",
+		})
 		return
 	}
 
@@ -89,6 +98,13 @@ func (u *UsersHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validation
+	messages, err := utils.ValidateErrors(userReq)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), messages)
+		return
+	}
+
 	// Hash password before saving
 	hashedPassword := utils.HashPassword(userReq.Password)
 
@@ -102,7 +118,12 @@ func (u *UsersHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 
 	err = u.UsersHandlerService.CreateUsers(&users)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusInternalServerError, "error creating user", nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error creating user",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -126,6 +147,13 @@ func (u *UsersHandler) UpdateUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validation
+	messages, err := utils.ValidateErrors(userReq)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), messages)
+		return
+	}
+
 	// Hash password before saving
 	rawPassword := userReq.Password
 	hashedPassword := utils.HashPassword(rawPassword)
@@ -140,7 +168,12 @@ func (u *UsersHandler) UpdateUsers(w http.ResponseWriter, r *http.Request) {
 
 	err = u.UsersHandlerService.UpdateUsers(usersID, &users)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusInternalServerError, "error updating user", nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error updating user",
+			"error":   err.Error(),
+		})
 		return
 	}
 
@@ -157,10 +190,15 @@ func (u *UsersHandler) DeleteUsers(w http.ResponseWriter, r *http.Request) {
 
 	err = u.UsersHandlerService.DeleteUsers(usersID)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusBadRequest, "Error delete :"+err.Error(), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error deleting user",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "Deleted Success", nil)
+	utils.ResponseSuccess(w, http.StatusOK, "success delete user", nil)
 }
 
