@@ -40,6 +40,16 @@ func ReadConfigration() (*Configuration, error) {
 	appName := viper.GetString("APP_NAME")
 	port := viper.GetInt("PORT")
 	debug := viper.GetBool("DEBUG")
+	limit := viper.GetInt("LIMIT")
+	pathLogging := viper.GetString("PATH_LOGGING")
+
+	// Default values
+	if limit == 0 {
+		limit = 10
+	}
+	if pathLogging == "" {
+		pathLogging = "./logs/"
+	}
 
 	dbUser := viper.GetString("DATABASE_USERNAME")
 	dbPassword := viper.GetString("DATABASE_PASSWORD")
@@ -52,6 +62,8 @@ func ReadConfigration() (*Configuration, error) {
 		AppName: appName,
 		Port:    port,
 		Debug:   debug,
+		Limit:   limit,
+		PathLogging: pathLogging,
 		DB: DatabaseCofig{
 			Name:     dbName,
 			Username: dbUser,

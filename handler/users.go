@@ -45,7 +45,7 @@ func (u *UsersHandler) GetUsersByID(w http.ResponseWriter, r *http.Request) {
 
 // GetAllUsers - Get all users with pagination
 func (u *UsersHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := u.UsersHandlerService.FindAllUsers()
+	users, err := u.UsersHandlerService.GetAllUsers()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -65,14 +65,23 @@ func (u *UsersHandler) GetUsersByEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.UsersHandlerService.FindUsersByEmail(email)
+	user, err := u.UsersHandlerService.GetUsersByEmail(email)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusInternalServerError, "error finding user", nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error finding user",
+			"error":   err.Error(),
+		})
 		return
 	}
 
 	if user == nil {
-		utils.ResponseBadRequest(w, http.StatusNotFound, "user not found", nil)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "user not found",
+		})
 		return
 	}
 
@@ -89,6 +98,13 @@ func (u *UsersHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validation
+	messages, err := utils.ValidateErrors(userReq)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), messages)
+		return
+	}
+
 	// Hash password before saving
 	hashedPassword := utils.HashPassword(userReq.Password)
 
@@ -102,11 +118,87 @@ func (u *UsersHandler) CreateUsers(w http.ResponseWriter, r *http.Request) {
 
 	err = u.UsersHandlerService.CreateUsers(&users)
 	if err != nil {
-		utils.ResponseBadRequest(w, http.StatusInternalServerError, "error creating user", nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error creating user",
+			"error":   err.Error(),
+		})
 		return
 	}
 
 	utils.ResponseSuccess(w, http.StatusCreated, "success create user", users)
 }
 
+func (u *UsersHandler) UpdateUsers(w http.ResponseWriter, r *http.Request) {
+	usersIDStr := chi.URLParam(r, "id")
+
+	usersID, err := strconv.Atoi(usersIDStr)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "invalid id format", nil)
+		return
+	}
+
+	var userReq dto.Usersrequest
+
+	err = json.NewDecoder(r.Body).Decode(&userReq)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, "invalid request body", nil)
+		return
+	}
+
+	// validation
+	messages, err := utils.ValidateErrors(userReq)
+	if err != nil {
+		utils.ResponseBadRequest(w, http.StatusBadRequest, err.Error(), messages)
+		return
+	}
+
+	// Hash password before saving
+	rawPassword := userReq.Password
+	hashedPassword := utils.HashPassword(rawPassword)
+
+	// Map DTO to model
+	users := model.Users{
+		Username: userReq.Username,
+		Email:    userReq.Email,
+		Password: hashedPassword,
+		Role:     userReq.Role,
+	}
+
+	err = u.UsersHandlerService.UpdateUsers(usersID, &users)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error updating user",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	utils.ResponseSuccess(w, http.StatusOK, "success update user", users)
+}
+
+func (u *UsersHandler) DeleteUsers(w http.ResponseWriter, r *http.Request) {
+	usersIDStr := chi.URLParam(r, "id")
+
+	usersID, err := strconv.Atoi(usersIDStr)
+	if err != nil {
+		return
+	}
+
+	err = u.UsersHandlerService.DeleteUsers(usersID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  false,
+			"message": "error deleting user",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	utils.ResponseSuccess(w, http.StatusOK, "success delete user", nil)
+}
 

@@ -11,10 +11,11 @@ import (
 )
 
 type UsersRepository interface {
-	FindUsersByEmail(email string) (*model.Users, error)
+	GetUsersByEmail(email string) (*model.Users, error)
 	CreateUsers(data *model.Users) error
-	FindAllUsers() ([]model.Users, error)
+	GetAllUsers() ([]model.Users, error)
 	GetUsersByID(id int) (model.Users, error)
+	UpdateUsers(id int, data *model.Users) error
 	DeleteUsers(id int) error
 }
 
@@ -27,7 +28,7 @@ func NewUsersRepository(db database.PgxIface, log *zap.Logger) UsersRepository {
 	return &usersRepository{db: db, Logger: log}
 }
 
-func (r *usersRepository) FindUsersByEmail(email string) (*model.Users, error) {
+func (r *usersRepository) GetUsersByEmail(email string) (*model.Users, error) {
 	query := `
 		SELECT id, username, email, password, role, created_at, updated_at
 		FROM users
@@ -38,14 +39,22 @@ func (r *usersRepository) FindUsersByEmail(email string) (*model.Users, error) {
 			&user.Id, &user.Username, &user.Email, &user.Password, &user.Role,  &user.CreatedAt, &user.UpdatedAt)
 
 	if err == sql.ErrNoRows {
+		r.Logger.Debug("user not found by email", zap.String("email", email))
 		return nil, nil // user tidak ditemukan
+	}
+
+	if err != nil {
+		r.Logger.Error("failed to get user by email",
+			zap.String("email", email),
+			zap.Error(err),
+		)
 	}
 
 	return &user, err
 }
 
 
-func (r *usersRepository) FindAllUsers() ([]model.Users, error) {
+func (r *usersRepository) GetAllUsers() ([]model.Users, error) {
 	rows, err := r.db.Query(context.Background(), `SELECT id, username, email, password, role, created_at, updated_at FROM users`)
 	if err != nil {
 		return nil, err
@@ -71,7 +80,21 @@ func (r *usersRepository) CreateUsers(data *model.Users) error {
 		VALUES ($1, $2, $3, $4, NOW(), NOW())
 		RETURNING id
 	`
-	return r.db.QueryRow(context.Background(), query, data.Username, data.Email, data.Password, data.Role).Scan(&data.Id)
+	err := r.db.QueryRow(context.Background(), query, data.Username, data.Email, data.Password, data.Role).Scan(&data.Id)
+	if err != nil {
+		r.Logger.Error("failed to create user",
+			zap.String("username", data.Username),
+			zap.String("email", data.Email),
+			zap.Error(err),
+		)
+		return err
+	}
+	r.Logger.Info("user created successfully",
+		zap.Int("user_id", data.Id),
+		zap.String("username", data.Username),
+		zap.String("email", data.Email),
+	)
+	return nil
 }
 
 
@@ -88,18 +111,50 @@ func (r *usersRepository) GetUsersByID(id int) (model.Users, error) {
 	return user, nil
 }
 
+func (r *usersRepository) UpdateUsers(id int, data *model.Users) error {
+	query := `
+		UPDATE users
+		SET username = $1, email = $2, password = $3, role = $4, updated_at = NOW()
+		WHERE id = $5
+	`
+	result, err := r.db.Exec(context.Background(), query, data.Username, data.Email, data.Password, data.Role, id)
+	if err != nil {
+		r.Logger.Error("failed to update user",
+			zap.Int("user_id", id),
+			zap.Error(err),
+		)
+		return err
+	}
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		r.Logger.Warn("user not found for update", zap.Int("user_id", id))
+		return errors.New("user not found or already deleted")
+	}
+	r.Logger.Info("user updated successfully",
+		zap.Int("user_id", id),
+		zap.String("username", data.Username),
+	)
+	return nil
+}
+
 func (r *usersRepository) DeleteUsers(id int) error {
 	query := `DELETE FROM users WHERE id = $1`
 
 	result, err := r.db.Exec(context.Background(), query, id)
 	if err != nil {
+		r.Logger.Error("failed to delete user",
+			zap.Int("user_id", id),
+			zap.Error(err),
+		)
 		return err
 	}
 	rowAffected := result.RowsAffected()
 
 	if rowAffected == 0 {
+		r.Logger.Warn("user not found for deletion", zap.Int("user_id", id))
 		return errors.New("no rows affected")
 	}
 
-	return err
+	r.Logger.Info("user deleted successfully", zap.Int("user_id", id))
+	return nil
 }

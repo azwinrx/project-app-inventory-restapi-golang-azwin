@@ -8,6 +8,7 @@ import (
 type ItemsService interface {
 	GetItemsById(id int) (*model.Items, error) 
 	GetAllItems(page, limit int) ([]model.Items, int, error)
+	GetLowStockItems(threshold int) ([]model.Items, error)
 	CreateItems(data *model.Items) error
 	UpdateItems(id int, data *model.Items) error
 	DeleteItems(id int) error
@@ -38,6 +39,15 @@ func (s *itemsService) GetAllItems(page, limit int) ([]model.Items, int, error) 
 	}
 	
 	return s.Repo.GetAllItems(page, limit)
+}
+
+func (s *itemsService) GetLowStockItems(threshold int) ([]model.Items, error) {
+	// Default threshold to 5 if not provided or invalid
+	if threshold < 1 {
+		threshold = 5
+	}
+	
+	return s.Repo.GetLowStockItems(threshold)
 }
 
 func (s *itemsService) CreateItems(data *model.Items) error {

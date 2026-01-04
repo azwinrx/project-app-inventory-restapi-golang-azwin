@@ -12,6 +12,8 @@ type Repository struct {
 	RacksRepo *racksRepository
 	WarehousesRepo *warehousesRepository
 	UsersRepo *usersRepository
+	SalesRepo *salesRepository
+	ReportsRepo *reportsRepository
 }
 
 func NewRepository(db database.PgxIface, log *zap.Logger) Repository {
@@ -21,5 +23,7 @@ func NewRepository(db database.PgxIface, log *zap.Logger) Repository {
 		RacksRepo: &racksRepository{db: db, Logger: log},
 		WarehousesRepo: &warehousesRepository{db: db, Logger: log},
 		UsersRepo: &usersRepository{db: db, Logger: log},
+		SalesRepo: &salesRepository{db: db, Logger: log},
+		ReportsRepo: &reportsRepository{db: db, Logger: log},
 	}
 }

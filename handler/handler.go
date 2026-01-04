@@ -11,6 +11,8 @@ type Handler struct {
 	RacksHandler RacksHandler
 	WarehousesHandler WarehousesHandler
 	UsersHandler UsersHandler
+	SalesHandler SalesHandler
+	ReportsHandler ReportsHandler
 }
 
 func NewHandler(service service.Service, config utils.Configuration) Handler {
@@ -20,5 +22,7 @@ func NewHandler(service service.Service, config utils.Configuration) Handler {
 		RacksHandler: NewRacksHandler(service.RacksService, config),
 		WarehousesHandler: NewWarehousesHandler(service.WarehousesService, config),
 		UsersHandler: NewUsersHandler(service.UsersService, config),
+		SalesHandler: NewSalesHandler(service.SalesService, config),
+		ReportsHandler: NewReportsHandler(service.ReportsService, config),
 	}
 }
