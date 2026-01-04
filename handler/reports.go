@@ -19,8 +19,8 @@ func NewReportsHandler(reportsService service.ReportsService, config utils.Confi
 	}
 }
 
-func (h *ReportsHandler) GetDashboardReport(w http.ResponseWriter, r *http.Request) {
-	report, err := h.ReportsHandlerService.GetDashboardReport()
+func (h *ReportsHandler) GetItemsReport(w http.ResponseWriter, r *http.Request) {
+	report, err := h.ReportsHandlerService.GetItemsReport()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -29,11 +29,11 @@ func (h *ReportsHandler) GetDashboardReport(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "success get dashboard report", report)
+	utils.ResponseSuccess(w, http.StatusOK, "success get items report", report)
 }
 
-func (h *ReportsHandler) GetItemSalesReport(w http.ResponseWriter, r *http.Request) {
-	report, err := h.ReportsHandlerService.GetItemSalesReport()
+func (h *ReportsHandler) GetSalesReport(w http.ResponseWriter, r *http.Request) {
+	report, err := h.ReportsHandlerService.GetSalesReport()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -42,5 +42,18 @@ func (h *ReportsHandler) GetItemSalesReport(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	utils.ResponseSuccess(w, http.StatusOK, "success get item sales report", report)
+	utils.ResponseSuccess(w, http.StatusOK, "success get sales report", report)
+}
+
+func (h *ReportsHandler) GetRevenueReport(w http.ResponseWriter, r *http.Request) {
+	report, err := h.ReportsHandlerService.GetRevenueReport()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	utils.ResponseSuccess(w, http.StatusOK, "success get revenue report", report)
 }

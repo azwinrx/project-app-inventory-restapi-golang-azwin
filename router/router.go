@@ -106,10 +106,12 @@ func ApiV1(handler handler.Handler, mw mCostume.MiddlewareCostume) *chi.Mux{
 	})
 
 	r.Route("/reports", func(r chi.Router) {
-		// get dashboard report
-		r.Get("/dashboard", handler.ReportsHandler.GetDashboardReport)
-		// get item sales report
-		r.Get("/items-sales", handler.ReportsHandler.GetItemSalesReport)
+		// get items report - total barang
+		r.Get("/items", handler.ReportsHandler.GetItemsReport)
+		// get sales report - penjualan
+		r.Get("/sales", handler.ReportsHandler.GetSalesReport)
+		// get revenue report - pendapatan
+		r.Get("/revenue", handler.ReportsHandler.GetRevenueReport)
 	})
 
 	return r

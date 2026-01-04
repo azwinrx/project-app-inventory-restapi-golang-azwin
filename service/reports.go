@@ -5,8 +5,9 @@ import (
 )
 
 type ReportsService interface {
-	GetDashboardReport() (*repository.ReportData, error)
-	GetItemSalesReport() ([]repository.ItemSalesReport, error)
+	GetItemsReport() (*repository.ItemsReport, error)
+	GetSalesReport() (*repository.SalesReport, error)
+	GetRevenueReport() (*repository.RevenueReport, error)
 }
 
 type reportsService struct {
@@ -17,10 +18,14 @@ func NewReportsService(repo repository.ReportsRepository) ReportsService {
 	return &reportsService{Repo: repo}
 }
 
-func (s *reportsService) GetDashboardReport() (*repository.ReportData, error) {
-	return s.Repo.GetDashboardReport()
+func (s *reportsService) GetItemsReport() (*repository.ItemsReport, error) {
+	return s.Repo.GetItemsReport()
 }
 
-func (s *reportsService) GetItemSalesReport() ([]repository.ItemSalesReport, error) {
-	return s.Repo.GetItemSalesReport()
+func (s *reportsService) GetSalesReport() (*repository.SalesReport, error) {
+	return s.Repo.GetSalesReport()
+}
+
+func (s *reportsService) GetRevenueReport() (*repository.RevenueReport, error) {
+	return s.Repo.GetRevenueReport()
 }
